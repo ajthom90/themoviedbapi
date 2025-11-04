@@ -1,108 +1,202 @@
 plugins {
-    `java-library`
-    checkstyle
-    `maven-publish`
-    signing
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    kotlin("multiplatform") version "2.0.21"
+    kotlin("plugin.serialization") version "2.0.21"
+    id("maven-publish")
+    id("signing")
 }
 
 group = "uk.co.conoregan"
-version = "2.2.0"
+version = "3.0.0"
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    // logging
-    implementation(platform("org.slf4j:slf4j-bom:2.0.16"))
-    implementation("org.slf4j:slf4j-api")
+kotlin {
+    // JVM target for backwards compatibility
+    jvm {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "11"
+            }
+        }
+        testRuns["test"].executionTask.configure {
+            useJUnitPlatform()
+        }
+    }
 
-    // testing
-    testImplementation(platform("org.junit:junit-bom:5.11.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    // JavaScript target
+    js(IR) {
+        browser {
+            testTask {
+                enabled = true
+            }
+        }
+        nodejs {
+            testTask {
+                enabled = true
+            }
+        }
+    }
 
-    testImplementation(platform("org.mockito:mockito-bom:5.13.0"))
-    testImplementation("org.mockito:mockito-core")
+    // Native targets
+    // Apple platforms
+    macosX64()
+    macosArm64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+    watchosArm32()
+    watchosArm64()
+    watchosX64()
+    watchosSimulatorArm64()
+    tvosArm64()
+    tvosX64()
+    tvosSimulatorArm64()
 
-    // util
-    compileOnly("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("org.projectlombok:lombok:1.18.34")
-    testCompileOnly("org.projectlombok:lombok:1.18.34")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+    // Linux
+    linuxX64()
+    linuxArm64()
 
-    implementation(platform("com.fasterxml.jackson:jackson-bom:2.17.2"))
-    implementation("com.fasterxml.jackson.core:jackson-annotations")
-    implementation("com.fasterxml.jackson.core:jackson-core")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
+    // Windows
+    mingwX64()
 
-    implementation("org.apache.commons:commons-lang3:3.17.0")
-    testImplementation("commons-io:commons-io:2.16.1")
-}
+    // Common source sets
+    sourceSets {
+        val ktorVersion = "3.0.0"
+        val serializationVersion = "1.7.3"
+        val coroutinesVersion = "1.9.0"
+        val datetimeVersion = "0.6.1"
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
+        val commonMain by getting {
+            dependencies {
+                // Ktor client for HTTP requests
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
-tasks.test {
-    useJUnitPlatform()
-}
+                // Kotlin serialization for JSON
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
 
-checkstyle {
-    toolVersion = "10.17.0"
-    configFile = file("config/checkstyle/checkstyle.xml")
-}
-tasks.checkstyleMain {
-    source = fileTree("src/main/java")
-}
-tasks.checkstyleTest {
-    source = fileTree("src/test/java")
-}
-tasks.withType<Checkstyle>().configureEach {
-    reports {
-        html.required = true
+                // Coroutines
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+
+                // DateTime
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:$datetimeVersion")
+            }
+        }
+
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
+            }
+        }
+
+        val jvmMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+                implementation("ch.qos.logback:logback-classic:1.5.8")
+            }
+        }
+
+        val jvmTest by getting {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter:5.11.0")
+                implementation("io.mockk:mockk:1.13.13")
+            }
+        }
+
+        val jsMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-js:$ktorVersion")
+            }
+        }
+
+        val nativeMain by creating {
+            dependsOn(commonMain)
+        }
+
+        val appleMain by creating {
+            dependsOn(nativeMain)
+        }
+
+        val macosX64Main by getting { dependsOn(appleMain) }
+        val macosArm64Main by getting { dependsOn(appleMain) }
+        val iosX64Main by getting { dependsOn(appleMain) }
+        val iosArm64Main by getting { dependsOn(appleMain) }
+        val iosSimulatorArm64Main by getting { dependsOn(appleMain) }
+        val watchosArm32Main by getting { dependsOn(appleMain) }
+        val watchosArm64Main by getting { dependsOn(appleMain) }
+        val watchosX64Main by getting { dependsOn(appleMain) }
+        val watchosSimulatorArm64Main by getting { dependsOn(appleMain) }
+        val tvosArm64Main by getting { dependsOn(appleMain) }
+        val tvosX64Main by getting { dependsOn(appleMain) }
+        val tvosSimulatorArm64Main by getting { dependsOn(appleMain) }
+
+        val linuxX64Main by getting { dependsOn(nativeMain) }
+        val linuxArm64Main by getting { dependsOn(nativeMain) }
+        val mingwX64Main by getting { dependsOn(nativeMain) }
+
+        // Configure apple source sets to use darwin HTTP client
+        configure(listOf(
+            macosX64Main, macosArm64Main,
+            iosX64Main, iosArm64Main, iosSimulatorArm64Main,
+            watchosArm32Main, watchosArm64Main, watchosX64Main, watchosSimulatorArm64Main,
+            tvosArm64Main, tvosX64Main, tvosSimulatorArm64Main
+        )) {
+            dependencies {
+                implementation("io.ktor:ktor-client-darwin:$ktorVersion")
+            }
+        }
+
+        // Configure linux/mingw source sets
+        configure(listOf(linuxX64Main, linuxArm64Main, mingwX64Main)) {
+            dependencies {
+                implementation("io.ktor:ktor-client-curl:$ktorVersion")
+            }
+        }
     }
 }
 
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-
+        withType<MavenPublication> {
             pom {
-                name = "themoviedbapi"
-                description = "A Java-wrapper around the JSON API provided by TMdB, which is an open database for movie and tv content."
-                url = "https://github.com/c-eg/themoviedbapi"
+                name.set("themoviedbapi")
+                description.set("A Kotlin Multiplatform SDK for The Movie Database (TMDb) API v3")
+                url.set("https://github.com/c-eg/themoviedbapi")
 
                 licenses {
                     license {
-                        name = "BSD"
-                        url = "https://github.com/c-eg/themoviedbapi/blob/master/LICENCE.txt"
+                        name.set("BSD 2-Clause License")
+                        url.set("https://github.com/c-eg/themoviedbapi/blob/master/LICENCE.txt")
                     }
                 }
 
                 scm {
-                    connection = "scm:git:github.com/c-eg/themoviedbapi.git"
-                    url = "https://github.com/c-eg/themoviedbapi.git"
+                    connection.set("scm:git:github.com/c-eg/themoviedbapi.git")
+                    url.set("https://github.com/c-eg/themoviedbapi.git")
                 }
 
                 developers {
                     developer {
-                        id = "holgerbrandl"
-                        name = "Holger Brandl"
-                        email = "holgerbrandl@gmail.com"
+                        id.set("holgerbrandl")
+                        name.set("Holger Brandl")
+                        email.set("holgerbrandl@gmail.com")
                     }
 
                     developer {
-                        id = "c-eg"
-                        name = "Conor Egan"
-                        email = "17conoregan@gmail.com"
+                        id.set("c-eg")
+                        name.set("Conor Egan")
+                        email.set("17conoregan@gmail.com")
                     }
                 }
             }
         }
     }
+
     repositories {
         maven {
             name = "OSSRH"
@@ -115,20 +209,10 @@ publishing {
     }
 }
 
-if (project.hasProperty("signing.keyId") && project.hasProperty("signing.password") && project.hasProperty("signing.secretKeyRingFile")) signing {
-    sign(publishing.publications["mavenJava"])
-}
-
-tasks.javadoc {
-    if (JavaVersion.current().isJava9Compatible) {
-        (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
-    }
-}
-
-tasks {
-    javadoc {
-        options {
-            (this as CoreJavadocOptions).addBooleanOption("Xdoclint:none", true)
-        }
+if (project.hasProperty("signing.keyId") &&
+    project.hasProperty("signing.password") &&
+    project.hasProperty("signing.secretKeyRingFile")) {
+    signing {
+        sign(publishing.publications)
     }
 }
