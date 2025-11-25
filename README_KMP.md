@@ -128,7 +128,82 @@ popularMovies.results.forEach { movie ->
 }
 ```
 
-### Movie Search with Multiple Endpoints
+### Searching Content
+
+```kotlin
+// Search for movies
+val movieResults = tmdb.search.searchMovies(
+    query = "Fight Club",
+    year = "1999"
+)
+
+// Search for TV shows
+val tvResults = tmdb.search.searchTvShows(query = "Breaking Bad")
+
+// Search for people
+val peopleResults = tmdb.search.searchPeople(query = "Brad Pitt")
+
+// Multi-search (movies, TV, people)
+val multiResults = tmdb.search.searchMulti(query = "Inception")
+multiResults.results.forEach { result ->
+    when (result.mediaType) {
+        "movie" -> println("Movie: ${result.asMovie()?.title}")
+        "tv" -> println("TV: ${result.asTvSeries()?.name}")
+        "person" -> println("Person: ${result.asPerson()?.name}")
+    }
+}
+```
+
+### Trending Content
+
+```kotlin
+import uk.co.conoregan.themoviedbapi.api.TmdbTrending.TimeWindow
+
+// Get trending movies this week
+val trendingMovies = tmdb.trending.getMovies(TimeWindow.WEEK)
+
+// Get trending TV shows today
+val trendingTv = tmdb.trending.getTvShows(TimeWindow.DAY)
+
+// Get trending people
+val trendingPeople = tmdb.trending.getPeople(TimeWindow.DAY)
+
+// Get all trending content (mixed)
+val allTrending = tmdb.trending.getAll(TimeWindow.DAY)
+```
+
+### Configuration & Metadata
+
+```kotlin
+// Get API configuration for building image URLs
+val config = tmdb.configuration.getApiConfiguration()
+val imageBaseUrl = config.images.secureBaseUrl
+val posterSize = config.images.posterSizes.first()
+// Build image URL: "$imageBaseUrl/$posterSize/poster_path.jpg"
+
+// Get available genres
+val movieGenres = tmdb.genres.getMovieGenres()
+val tvGenres = tmdb.genres.getTvGenres()
+
+// Get languages
+val languages = tmdb.configuration.getLanguages()
+
+// Get countries
+val countries = tmdb.configuration.getCountries()
+```
+
+### Collections
+
+```kotlin
+// Get collection details (e.g., "The Lord of the Rings" collection)
+val collection = tmdb.collections.getDetails(119)
+println("${collection.name}: ${collection.parts.size} movies")
+collection.parts.forEach { movie ->
+    println("  - ${movie.title} (${movie.releaseDate})")
+}
+```
+
+### Movie Lists with Multiple Endpoints
 
 ```kotlin
 // Get now playing
@@ -245,35 +320,50 @@ suspend fun getMovie(id: Int) {
 
 ### Current Implementation Status
 
-#### ✅ Completed
-- Core HTTP client with Ktor
-- Exception handling
-- Movies API endpoints:
-  - Get movie details
-  - Account states
-  - Alternative titles
-  - Credits (cast & crew)
-  - External IDs
-  - Images
-  - Keywords
-  - Lists
-  - Recommendations
-  - Release dates
-  - Reviews
-  - Similar movies
-  - Translations
-  - Videos
-  - Watch providers
-  - Now playing
-  - Popular
-  - Top rated
-  - Upcoming
+#### ✅ Completed (38+ endpoints)
 
-#### 🚧 In Progress
-- TV Series API
-- Search API
-- People API
-- Discover API
+**Movies API** (18+ endpoints)
+- Movie details with append-to-response
+- Account states
+- Alternative titles
+- Credits (cast & crew)
+- External IDs, Images, Keywords
+- Lists, Recommendations, Similar
+- Release dates, Reviews
+- Translations, Videos
+- Watch providers
+- Now playing, Popular, Top rated, Upcoming
+
+**Search API** (7 endpoints)
+- Search movies, TV shows, people
+- Multi-search (all media types)
+- Search collections, companies, keywords
+
+**Trending API** (4 endpoints)
+- Trending movies, TV shows, people
+- All trending content
+- Day/week time windows
+
+**Configuration API** (6 endpoints)
+- API configuration (image URLs/sizes)
+- Countries, Languages
+- Departments/Jobs
+- Primary translations, Timezones
+
+**Genres API** (2 endpoints)
+- Movie genres
+- TV show genres
+
+**Collections API** (1 endpoint)
+- Collection details with all movies
+
+#### 🚧 Planned
+- TV Series API (detailed endpoints)
+- People API (person details, credits)
+- Discover API (advanced filtering)
+- Authentication API
+- Account API
+- Reviews, Keywords, Companies APIs
 - And more...
 
 ## 🤝 Contributing
