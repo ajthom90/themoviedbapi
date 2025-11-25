@@ -39,6 +39,56 @@ class TmdbApi(
     val movies: TmdbMovies by lazy { TmdbMovies(this) }
 
     /**
+     * Access search API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val results = tmdb.search.searchMovies("Fight Club")
+     * ```
+     */
+    val search: TmdbSearch by lazy { TmdbSearch(this) }
+
+    /**
+     * Access trending content API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val trendingMovies = tmdb.trending.getTrendingMovies("day")
+     * ```
+     */
+    val trending: TmdbTrending by lazy { TmdbTrending(this) }
+
+    /**
+     * Access configuration API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val config = tmdb.configuration.getApiConfiguration()
+     * ```
+     */
+    val configuration: TmdbConfiguration by lazy { TmdbConfiguration(this) }
+
+    /**
+     * Access genres API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val movieGenres = tmdb.genres.getMovieGenres()
+     * ```
+     */
+    val genres: TmdbGenres by lazy { TmdbGenres(this) }
+
+    /**
+     * Access collections API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val collection = tmdb.collections.getDetails(119)
+     * ```
+     */
+    val collections: TmdbCollections by lazy { TmdbCollections(this) }
+
+    /**
      * Close the API client and release resources.
      * Call this when you're done using the API.
      */
