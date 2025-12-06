@@ -203,6 +203,39 @@ collection.parts.forEach { movie ->
 }
 ```
 
+### People & Credits
+
+```kotlin
+// Get person details
+val person = tmdb.people.getDetails(287) // Brad Pitt
+println("${person.name} - ${person.knownForDepartment}")
+println("Born: ${person.birthday} in ${person.placeOfBirth}")
+println("Biography: ${person.biography?.take(200)}...")
+
+// Get combined credits (movies + TV)
+val credits = tmdb.people.getCombinedCredits(287)
+val movies = credits.cast.filter { it.mediaType == "movie" }
+val tvShows = credits.cast.filter { it.mediaType == "tv" }
+println("Movies: ${movies.size}, TV Shows: ${tvShows.size}")
+
+// Get movie credits only
+val movieCredits = tmdb.people.getMovieCredits(287)
+movieCredits.cast.forEach { movie ->
+    println("${movie.title} (${movie.releaseDate}) as ${movie.character}")
+}
+
+// Get TV credits only
+val tvCredits = tmdb.people.getTvCredits(287)
+tvCredits.cast.forEach { show ->
+    println("${show.name} (${show.episodeCount} episodes) as ${show.character}")
+}
+
+// Get external IDs (social media)
+val externalIds = tmdb.people.getExternalIds(287)
+println("IMDB: ${externalIds.imdbId}")
+println("Instagram: @${externalIds.instagramId}")
+```
+
 ### Movie Lists with Multiple Endpoints
 
 ```kotlin
@@ -320,9 +353,9 @@ suspend fun getMovie(id: Int) {
 
 ### Current Implementation Status
 
-#### ✅ Completed (38+ endpoints)
+#### ✅ Completed (45+ endpoints)
 
-**Movies API** (18+ endpoints)
+**Movies API** (18 endpoints)
 - Movie details with append-to-response
 - Account states
 - Alternative titles
@@ -356,6 +389,15 @@ suspend fun getMovie(id: Int) {
 
 **Collections API** (1 endpoint)
 - Collection details with all movies
+
+**People API** (7 endpoints)
+- Person details with append-to-response
+- Combined credits (movies + TV)
+- Movie credits (cast & crew)
+- TV credits (cast & crew)
+- External IDs (IMDB, social media)
+- Profile images
+- Translations
 
 #### 🚧 Planned
 - TV Series API (detailed endpoints)
