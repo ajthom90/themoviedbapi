@@ -89,6 +89,17 @@ class TmdbApi(
     val collections: TmdbCollections by lazy { TmdbCollections(this) }
 
     /**
+     * Access people API endpoints.
+     *
+     * Example:
+     * ```kotlin
+     * val person = tmdb.people.getDetails(287) // Brad Pitt
+     * val credits = tmdb.people.getCombinedCredits(287)
+     * ```
+     */
+    val people: TmdbPeople by lazy { TmdbPeople(this) }
+
+    /**
      * Close the API client and release resources.
      * Call this when you're done using the API.
      */
